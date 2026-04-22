@@ -37,7 +37,7 @@ public class TfLNetwork {
                 return stationList[i];
             }
         }
-        return null; // Station not found
+        return null;
     }
 
     public void addNewTrack(String startStationName, String targetStationName, String lineName, String direction, double travelTime) {
@@ -50,7 +50,6 @@ public class TfLNetwork {
         }
     }
 
-
     public void addNewInterchange(String stationName, String fromLine, String toLine, double time) {
         Station station = getStation(stationName);
         if (station != null) {
@@ -58,60 +57,79 @@ public class TfLNetwork {
         }
     }
 
-
     // ENGINEER METHODS
 
     public void addDelayToTrack(String startStationName, String targetStationName, double delayMinutes) {
         Station startStation = getStation(startStationName);
+        Station targetStation = getStation(targetStationName);
 
-        if (startStation != null) {
-            for (int i = 0; i < startStation.getConnectionCount(); i++) {
-                Connection track = startStation.getConnections()[i];
-                if (track.getDestination().getName().equalsIgnoreCase(targetStationName)) {
-                    track.setDelayTime(delayMinutes);
-                    System.out.println("Success: Added " + delayMinutes + " min delay from " + startStationName + " to " + targetStationName);
-                    return;
-                }
+        if (startStation == null) {
+            System.out.println("Error: Start station '" + startStationName + "' does not exist in the network.");
+            return;
+        }
+        if (targetStation == null) {
+            System.out.println("Error: Target station '" + targetStationName + "' does not exist in the network.");
+            return;
+        }
+
+        for (int i = 0; i < startStation.getConnectionCount(); i++) {
+            Connection track = startStation.getConnections()[i];
+
+            if (track.getDestination().getName().equalsIgnoreCase(targetStationName)) {
+                track.setDelayTime(delayMinutes);
+                System.out.println("Success: Added " + delayMinutes + " min delay from " + startStation.getName() + " to " + targetStation.getName() + ".");
+                return;
             }
         }
-        System.out.println("Error: Track not found.");
+
+        System.out.println("Error: No direct route available between " + startStation.getName() + " and " + targetStation.getName() + ".");
     }
 
     public void openOrCloseTrack(String startStationName, String targetStationName, boolean isOpen) {
         Station startStation = getStation(startStationName);
+        Station targetStation = getStation(targetStationName);
 
+        if (startStation == null) {
+            System.out.println("Error: Start station '" + startStationName + "' does not exist in the network.");
+            return;
+        }
+
+        if (targetStation == null) {
+            System.out.println("Error: Target station '" + targetStationName + "' does not exist in the network.");
+            return;
+        }
+
+        for (int i = 0; i < startStation.getConnectionCount(); i++) {
+            Connection track = startStation.getConnections()[i];
+
+            if (track.getDestination().getName().equalsIgnoreCase(targetStationName)) {
+                track.setOpenStatus(isOpen);
+                String statusMessage = isOpen ? "Opened" : "Closed";
+                System.out.println("Success: Track from " + startStation.getName() + " to " + targetStation.getName() + " is now " + statusMessage + ".");
+                return;
+            }
+        }
+
+        System.out.println("Error: No direct route available between " + startStation.getName() + " and " + targetStation.getName() + ".");
+    }
+
+    // Checks if a track is open or closed before the Engineer changes it
+    public String getTrackStatusString(String startStationName, String targetStationName) {
+        Station startStation = getStation(startStationName);
         if (startStation != null) {
             for (int i = 0; i < startStation.getConnectionCount(); i++) {
                 Connection track = startStation.getConnections()[i];
                 if (track.getDestination().getName().equalsIgnoreCase(targetStationName)) {
-                    track.setOpenStatus(isOpen);
-                    String statusMessage = isOpen ? "Opened" : "Closed";
-                    System.out.println("Success: Track from " + startStationName + " to " + targetStationName + " is now " + statusMessage);
-                    return;
+                    return track.isOpen() ? "OPEN" : "CLOSED";
                 }
             }
         }
-        System.out.println("Error: Track not found.");
+        return "Not Found";
     }
 
-    public void printNetworkStatus() {
-        System.out.println("\n--- TFL NETWORK STATUS REPORT ---");
-
-        System.out.println("\n[CLOSED TRACK SECTIONS]");
-        boolean foundClosed = false;
-        for (int i = 0; i < totalStations; i++) {
-            Station s = stationList[i];
-            for (int j = 0; j < s.getConnectionCount(); j++) {
-                Connection c = s.getConnections()[j];
-                if (!c.isOpen()) {
-                    System.out.println(c.getLineName() + " (" + c.getDirection() + "): " + s.getName() + " to " + c.getDestination().getName() + " - CLOSED");
-                    foundClosed = true;
-                }
-            }
-        }
-        if (!foundClosed) System.out.println("All tracks are open.");
-
-        System.out.println("\n[DELAYED TRACK SECTIONS]");
+    // Prints ONLY the delays
+    public void printDelayStatus() {
+        System.out.println("\n--- DELAY STATUS REPORT ---");
         boolean foundDelayed = false;
         for (int i = 0; i < totalStations; i++) {
             Station s = stationList[i];
@@ -123,14 +141,37 @@ public class TfLNetwork {
                 }
             }
         }
-        if (!foundDelayed) System.out.println("No delays on the network.");
-        System.out.println("---------------------------------");
+        if (!foundDelayed) System.out.println("No delays on the network. Everything is running smoothly.");
+        System.out.println("---------------------------");
     }
 
-    // CUSTOMER METHODS (Search & Filter)
+    // Prints ONLY the closures
+    public void printClosureStatus() {
+        System.out.println("\n--- CONNECTION STATUS REPORT ---");
+        boolean foundClosed = false;
+        for (int i = 0; i < totalStations; i++) {
+            Station s = stationList[i];
+            for (int j = 0; j < s.getConnectionCount(); j++) {
+                Connection c = s.getConnections()[j];
+                if (!c.isOpen()) {
+                    System.out.println(c.getLineName() + " (" + c.getDirection() + "): " + s.getName() + " to " + c.getDestination().getName() + " - CLOSED");
+                    foundClosed = true;
+                }
+            }
+        }
+        if (!foundClosed) System.out.println("All tracks are currently OPEN.");
+        System.out.println("--------------------------------");
+    }
+
+
+    // CUSTOMER METHODS (Search & Filter) & Benchmark
 
     public void displayStationInformation(String stationName) {
+        // START BENCHMARK
+        long startTime = System.nanoTime();
         Station foundStation = getStation(stationName);
+        long endTime = System.nanoTime();
+        // STOP BENCHMARK
 
         if (foundStation == null) {
             System.out.println("Error: Could not find a station named '" + stationName + "'.");
@@ -146,45 +187,78 @@ public class TfLNetwork {
             return;
         }
 
-        // Loop through every track and simulate a live departure screen
+        // 1. Find all unique Lines at this station
+        String[] uniqueLines = new String[foundStation.getConnectionCount()];
+        int uniqueLineCount = 0;
+
         for (int i = 0; i < foundStation.getConnectionCount(); i++) {
-            Connection track = foundStation.getConnections()[i];
+            String lineName = foundStation.getConnections()[i].getLineName();
+            boolean alreadyAdded = false;
 
-            String line = track.getLineName();
-            String dest = "to " + track.getDestination().getName();
-
-            // Check if Engineers closed the track
-            if (!track.isOpen()) {
-                System.out.printf("%-12s %-25s %s%n", line, dest, "CLOSED - SEE STAFF");
-                continue;
+            for (int j = 0; j < uniqueLineCount; j++) {
+                if (uniqueLines[j].equalsIgnoreCase(lineName)) {
+                    alreadyAdded = true;
+                    break;
+                }
             }
-
-            // Check if there are severe delays
-            if (track.getDelayTime() > 5.0) {
-                System.out.printf("%-12s %-25s %s%n", line, dest, "SEVERE DELAYS");
-                continue;
+            if (!alreadyAdded) {
+                uniqueLines[uniqueLineCount] = lineName;
+                uniqueLineCount++;
             }
-
-            // Simulate realistic live train arrivals based on the current time
-            // Train 1: 0 to 2 mins away. If 0, we print "Due"
-            int train1 = (int)(Math.random() * 3);
-            // Train 2: 2 to 5 mins after Train 1
-            int train2 = train1 + (int)(Math.random() * 4) + 2;
-            // Train 3: 3 to 7 mins after Train 2
-            int train3 = train2 + (int)(Math.random() * 5) + 3;
-
-            String t1Display = (train1 == 0) ? "Due" : train1 + " min";
-
-            // Print the beautifully formatted row
-            System.out.printf("%-12s %-25s %s, %d min, %d min%n", line, dest, t1Display, train2, train3);
         }
+
+        // 2. Print the departures grouped by Line
+        for (int i = 0; i < uniqueLineCount; i++) {
+            String currentLineName = uniqueLines[i];
+            System.out.println("\n[ " + currentLineName.toUpperCase() + " LINE ]");
+
+            // Find all tracks that belong to this specific line
+            for (int j = 0; j < foundStation.getConnectionCount(); j++) {
+                Connection track = foundStation.getConnections()[j];
+
+                if (track.getLineName().equalsIgnoreCase(currentLineName)) {
+                    String dest = track.getDestination().getName();
+
+                    // Check if closed
+                    if (!track.isOpen()) {
+                        System.out.printf("  %-28s %s%n", dest, "CLOSED");
+                        continue;
+                    }
+
+                    // Check for severe delays
+                    if (track.getDelayTime() > 5.0) {
+                        System.out.printf("  %-28s %s%n", dest, "SEVERE DELAYS");
+                        continue;
+                    }
+
+                    // Calculate simulated live times
+                    int train1 = (int)(Math.random() * 3);
+                    int train2 = train1 + (int)(Math.random() * 4) + 2;
+                    int train3 = train2 + (int)(Math.random() * 5) + 3;
+
+                    String t1Display = (train1 == 0) ? "Due" : train1 + " min";
+
+                    // Print the result
+                    System.out.printf("  %-28s %s, %d min, %d min%n", dest, t1Display, train2, train3);
+                }
+            }
+        }
+        System.out.println("\n=======================================================");
+
+        //PRINT BENCHMARK RESULTS
+        double executionTimeMs = (endTime - startTime) / 1_000_000.0;
+        System.out.println("Array Search Time: " + String.format("%.5f", executionTimeMs) + " ms");
         System.out.println("=======================================================");
     }
 
+    //CUSTOMER METHOD (Line Filter & Benchmark)
 
     public void displayStationsOnLine(String searchLineName) {
         System.out.println("\n--- Stations on the " + searchLineName + " Line ---");
         boolean foundAny = false;
+
+        // START BENCHMARK: Timing the array filtering process
+        long startTime = System.nanoTime();
 
         for (int i = 0; i < totalStations; i++) {
             Station currentStation = stationList[i];
@@ -202,15 +276,29 @@ public class TfLNetwork {
                 foundAny = true;
             }
         }
+        // STOP BENCHMARK
+        long endTime = System.nanoTime();
 
         if (!foundAny) {
             System.out.println("No stations found for line: " + searchLineName);
         }
+
+        //Print BENCHMARK
+        double executionTimeMs = (endTime - startTime) / 1_000_000.0;
+        System.out.println("-------------------------------------");
+        System.out.println("Array Filter Time: " + String.format("%.5f", executionTimeMs) + " ms");
+        System.out.println("-------------------------------------");
     }
 
-    // CUSTOMER METHOD (Find Fastest Route)
+
+    // CUSTOMER METHOD (Find Fastest Route & Benchmark)
 
     public void findFastestRoute(String startStationName, String targetStationName) {
+
+        if (startStationName.equalsIgnoreCase(targetStationName)) {
+            System.out.println("Error: You are typing same " + startStationName + " station name. Please try again.");
+            return;
+        }
         Station startNode = getStation(startStationName);
         Station targetNode = getStation(targetStationName);
 
@@ -218,6 +306,10 @@ public class TfLNetwork {
             System.out.println("Error: Invalid start or end station.");
             return;
         }
+
+
+        // START ALGORITHM BENCHMARK TIMER
+        long startTime = System.nanoTime();
 
         // Parallel arrays for Dijkstra's Algorithm
         double[] shortestTimes = new double[totalStations];
@@ -250,21 +342,21 @@ public class TfLNetwork {
             for (int j = 0; j < currentStation.getConnectionCount(); j++) {
                 Connection track = currentStation.getConnections()[j];
 
-                if (track.isOpen() == false) {
+                if (!track.isOpen()) {
                     continue;
                 }
 
                 int neighborIndex = getStationIndex(track.getDestination().getName());
 
-                // Dynamic interchange logic (using your CSV data)
+                // Dynamic interchange logic (using CSV data)
                 String lineWeArrivedOn = previousLineName[currentStationIndex];
                 double walkingPenalty = currentStation.getInterchangeTime(lineWeArrivedOn, track.getLineName());
 
                 // Calculate total time to reach this neighbor
                 double timeToReachNeighbor = shortestTimes[currentStationIndex] + track.getTotalTime() + walkingPenalty;
 
-                // If we found a faster way, update our records
-                if (hasBeenVisited[neighborIndex] == false && timeToReachNeighbor < shortestTimes[neighborIndex]) {
+                // If the program found a faster way, update records
+                if (!hasBeenVisited[neighborIndex] && timeToReachNeighbor < shortestTimes[neighborIndex]) {
                     shortestTimes[neighborIndex] = timeToReachNeighbor;
                     previousStation[neighborIndex] = currentStation;
                     previousLineName[neighborIndex] = track.getLineName();
@@ -272,17 +364,20 @@ public class TfLNetwork {
             }
         }
 
-        // ==========================================
-        // NEW: PRINT THE STEP-BY-STEP ITINERARY
-        // ==========================================
+
+        // STOP ALGORITHM BENCHMARK TIMER
+        long endTime = System.nanoTime();
+        double executionTimeMs = (endTime - startTime) / 1_000_000.0; // Convert nanoseconds to milliseconds
+
+        // PRINT THE STEP-BY-STEP ITINERARY
         int targetIndex = getStationIndex(targetStationName);
 
         if (shortestTimes[targetIndex] == Double.MAX_VALUE) {
             System.out.println("No route found! Tracks might be closed.");
         } else {
-            System.out.println("\n--- Journey Itinerary ---");
+            System.out.println("\n--- Journey Planner ---");
 
-            // 1. Create temporary hand-coded arrays to hold the path backwards
+            // 1. Create temporary arrays to hold the path backwards
             Station[] backwardsPath = new Station[totalStations];
             String[] backwardsLines = new String[totalStations];
             int stepCount = 0;
@@ -322,6 +417,10 @@ public class TfLNetwork {
 
             System.out.println("[Arrive] " + backwardsPath[0].getName());
             System.out.println("\nTotal Journey Time: " + String.format("%.0f", shortestTimes[targetIndex]) + " minutes");
+
+            //Print the Benchmark Results!
+            System.out.println("-------------------------");
+            System.out.println("V1 Algorithm Execution Time: " + String.format("%.4f", executionTimeMs) + " ms");
             System.out.println("-------------------------");
         }
     }

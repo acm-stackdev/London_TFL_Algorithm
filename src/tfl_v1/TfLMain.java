@@ -4,8 +4,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * The main entry point for the application.
@@ -21,9 +19,20 @@ public class TfLMain {
         System.out.println("==================================");
         System.out.println("Loading Database...");
 
+        // START BENCHMARK: DATABASE LOAD TIME
+        long startLoadTime = System.nanoTime();
+
         // Load our two specific CSV files
         loadConnections(network, "Connections.csv");
         loadInterchanges(network, "Interchanges.csv");
+
+        // STOP BENCHMARK
+        long endLoadTime = System.nanoTime();
+        double loadTimeMs = (endLoadTime - startLoadTime) / 1_000_000.0;
+
+        System.out.println("----------------------------------");
+        System.out.println("Database Boot Time: " + String.format("%.2f", loadTimeMs) + " ms");
+        System.out.println("----------------------------------");
 
         Scanner scanner = new Scanner(System.in);
         boolean isRunning = true;
@@ -60,15 +69,14 @@ public class TfLMain {
     }
 
     // CUSTOMER MENU ROUTINE
-
     private static void runCustomerMenu(Scanner scanner, TfLNetwork network) {
         boolean inCustomerMenu = true;
 
         while (inCustomerMenu) {
             System.out.println("\n--- CUSTOMER MENU ---");
-            System.out.println("1. Plan a Journey (Fastest Route)");
-            System.out.println("2. Live Departure Board (Search Station)");
-            System.out.println("3. View Stations on a Line (Filter by Line)");
+            System.out.println("1. Plan a Journey "); //Fastest Route
+            System.out.println("2. Search by Station");// Live Board
+            System.out.println("3. View Stations on a Line"); //Filter by Line
             System.out.println("0. Return to Main Menu");
             System.out.print("Enter choice: ");
 
@@ -87,7 +95,7 @@ public class TfLMain {
                     break;
 
                 case "2":
-                    System.out.print("Enter Station Name for Live Board: ");
+                    System.out.print("Enter Station Name: ");
                     String searchName = scanner.nextLine();
                     network.displayStationInformation(searchName);
                     break;
@@ -109,15 +117,15 @@ public class TfLMain {
     }
 
     // ENGINEER MENU ROUTINE
-
     private static void runEngineerMenu(Scanner scanner, TfLNetwork network) {
         boolean inEngineerMenu = true;
 
         while (inEngineerMenu) {
             System.out.println("\n--- ENGINEER MENU ---");
             System.out.println("1. Add Delay to Track");
-            System.out.println("2. Open / Close Track");
-            System.out.println("3. View Network Status (Delays & Closures)");
+            System.out.println("2. Manage Connections Track (Open/Close)");
+            System.out.println("3. View Delay Status");
+            System.out.println("4. View Connection Status (Closures)");
             System.out.println("0. Return to Main Menu");
             System.out.print("Enter choice: ");
 
@@ -143,14 +151,36 @@ public class TfLMain {
                     String statusStart = scanner.nextLine();
                     System.out.print("Enter Target Station: ");
                     String statusTarget = scanner.nextLine();
-                    System.out.print("Type 'open' or 'close': ");
-                    String openOrClose = scanner.nextLine();
-                    boolean isOpen = openOrClose.equalsIgnoreCase("open");
-                    network.openOrCloseTrack(statusStart, statusTarget, isOpen);
+
+                    // Fetch and display current status!
+                    String currentStatus = network.getTrackStatusString(statusStart, statusTarget);
+
+                    if (currentStatus.equals("Not Found")) {
+                        System.out.println("Error: No direct route exists between " + statusStart + " and " + statusTarget + ".");
+                    } else {
+                        System.out.println("Current Status: " + currentStatus);
+                        System.out.println("Select Action:");
+                        System.out.println("1. Set to OPEN");
+                        System.out.println("2. Set to CLOSED");
+                        System.out.print("Enter choice (1 or 2): ");
+
+                        String action = scanner.nextLine();
+                        if (action.equals("1")) {
+                            network.openOrCloseTrack(statusStart, statusTarget, true);
+                        } else if (action.equals("2")) {
+                            network.openOrCloseTrack(statusStart, statusTarget, false);
+                        } else {
+                            System.out.println("Invalid action choice. Returning to menu.");
+                        }
+                    }
                     break;
 
                 case "3":
-                    network.printNetworkStatus();
+                    network.printDelayStatus();
+                    break;
+
+                case "4":
+                    network.printClosureStatus();
                     break;
 
                 case "0":
@@ -162,7 +192,6 @@ public class TfLMain {
             }
         }
     }
-
 
     // DATA LOADING METHODS
     private static void loadConnections(TfLNetwork network, String filename) {
