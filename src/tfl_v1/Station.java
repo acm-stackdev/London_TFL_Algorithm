@@ -44,10 +44,6 @@ public class Station {
     // INTERCHANGE LOGIC (Line Changes)
     // ==========================================
 
-    /**
-     * Adds a new line-change walking time to this station.
-     * Uses the exact same auto-growing array logic.
-     */
     public void addInterchange(Interchange newInterchange) {
         if (interchangeCount == interchanges.length) {
             Interchange[] biggerArray = new Interchange[interchanges.length * 2];
@@ -79,7 +75,7 @@ public class Station {
             }
         }
 
-        // Fallback: If the lines are different but we forgot to put them in the CSV, default to 2 minutes
+        // Fallback: If forgot time to put them in the CSV, default to 2 minutes
         return 2.0;
     }
 

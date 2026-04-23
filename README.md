@@ -1,56 +1,59 @@
 # TfL Network Manager - Version 1 (Algorithmic Implementation)
 
 ## Overview
-This project is a console-based application that simulates the Transport for London (TfL) Underground network. **Version 1 is built entirely using hand-coded data structures**, strictly avoiding standard Java collections like `ArrayList`, `HashMap`, or `PriorityQueue`. The purpose of this version is to demonstrate a foundational understanding of arrays, dynamic memory allocation, and core computer science algorithms.
+This project is a high-fidelity simulation of the TfL Underground network. **Version 1 is a "Hand-Coded" implementation**, designed to demonstrate mastery of low-level data structures. Every dynamic storage element, search routine, and sorting mechanism has been built using native Java arrays, strictly avoiding the `java.util` collections library.
 
 ---
 
-## Core Algorithms & Data Structures
+## Algorithmic Architecture
 
-Because this system relies purely on native Java arrays, several classical algorithmic approaches were implemented to handle routing, searching, and memory management.
+The primary focus of this version is the implementation of classical algorithms using primitive data structures.
 
-### 1. Shortest Path (Dijkstra's Algorithm)
-To calculate the fastest route between two stations, the system uses a custom implementation of **Dijkstra’s Algorithm**.
-* **Implementation:** Uses parallel arrays (`shortestTimes`, `hasBeenVisited`, `previousStation`) instead of standard Min-Heaps/Priority Queues.
-* **Edge Weights:** The algorithm dynamically calculates track traversal time plus specific interchange penalties (walking times) fetched from `Interchanges.csv`.
-* **Dynamic Routing:** Automatically ignores edges (tracks) that Engineers have marked as `CLOSED` and accurately adds `SEVERE DELAYS` to the edge weights.
+### 1. Pathfinding: Dijkstra's Algorithm $O(V^2)$
+The system calculates the fastest route using a custom Dijkstra implementation.
+* **Mechanism:** Uses parallel primitive arrays to track shortest paths and visited nodes.
+* **Edge Weights:** Traversals account for base travel time, engineer-reported delays, and specific interchange walking penalties.
+* **Itinerary Generation:** Uses a backtracking algorithm to trace breadcrumbs from the destination to the source, generating a step-by-step travel plan.
 
-### 2. Searching & Filtering (Linear Search - $O(N)$)
-Without HashMaps, the application relies on **Linear Search** algorithms to locate specific nodes (Stations) and edges (Connections).
-* **Station Lookup:** To find a station, the system iterates through the master `Station[]` array one by one until a string match is found.
-* **Grouping:** The Live Departures board uses a nested linear loop to dynamically find and group unique underground lines without using `HashSet`.
+### 2. Multi-Level Sorting: Double Bubble Sort $O(N^2)$
+For the Live Departure Board, the system implements a **Composite-Key Bubble Sort**.
+* **Primary Key:** Underground Line (Alphabetical A-Z).
+* **Secondary Key:** Destination Station (Alphabetical A-Z).
+* **Implementation:** Nested `for` loops iterate through connections, performing swaps based on multi-level conditional logic to ensure the "App-style" grouped UI layout.
 
-### 3. Data Insertion (Dynamic Array Resizing)
-To handle the "Insert Data" requirement without standard Java Lists, the system features auto-growing arrays.
-* **Mechanism:** When reading the CSV database, if a `Station[]` or `Connection[]` array reaches its capacity, the algorithm creates a new array double the size ($O(N)$ space) and sequentially copies the existing data over ($O(N)$ time) before adding the new element.
+### 3. Searching & Filtering: Linear Search $O(N)$
+Without HashMaps, the system demonstrates the foundational logic of linear traversal:
+* **Lookup:** Every station retrieval requires a full iteration through the `stationList` array.
+* **Filtering:** Line-based searches iterate through all network edges to extract matches into a temporary array for sorting.
 
----
-
-## Performance Benchmarking Suite
-
-To scientifically evaluate the efficiency of these hand-coded structures, a high-precision benchmarking suite using `System.nanoTime()` has been integrated. This isolates the pure mathematical execution time (excluding UI/Console printing) for four critical operations:
-
-1. **Database Boot Time (Insertion):** Measures the time taken to read the CSVs, dynamically resize arrays, and build the Graph network.
-2. **Algorithm Execution Time (Pathfinding):** Measures the exact millisecond calculation time of Dijkstra's Algorithm.
-3. **Array Search Time:** Measures the $O(N)$ linear search required to find a station for the Live Departures board.
-4. **Array Filter Time:** Measures the $O(N)$ time required to traverse the entire network and filter stations by a specific Line.
-
-*Note: These benchmarks will serve as the baseline data for the final report, proving the performance differential when upgrading to standard Java Collections in Version 2.*
+### 4. Memory Management: Dynamic Array Resizing
+To handle the "Insert Data" requirement, a custom `ArrayList`-style resizing logic is used. Arrays begin with a small footprint and automatically double in size ($O(N)$ reallocation) as the CSV data is parsed.
 
 ---
 
-## Summary of Functions
+## Performance Benchmarking (The Baseline)
 
-The application features a robust, crash-proof nested terminal UI divided into two user modes:
+A critical component of this project is the **Performance Suite**. Using `System.nanoTime()`, we have isolated the execution time of four key algorithmic operations. This data serves as the **Baseline** for our Version 2 comparison.
 
-### Customer Access
-* **Plan a Journey:** Calculates the shortest path between two stations and generates a visual, app-style vertical timeline of the itinerary, including specific line interchanges.
-* **Live Departure Board:** Simulates a real-time digital platform screen. It groups outgoing tracks by Line and displays dynamically generated train arrival times (e.g., "Due, 2 min, 5 min").
-* **Filter by Line:** Iterates through the network and returns all stations servicing a specific Underground line.
+| Operation | Algorithm Used | Measured Logic |
+| :--- | :--- | :--- |
+| **Database Load** | Dynamic Insertion | CSV parsing + $O(N)$ Array Resizing |
+| **Pathfinding** | Dijkstra's | Path calculation (excluding UI printing) |
+| **Station Search** | Linear Search | $O(N)$ lookup in the Station Array |
+| **Board Sorting** | Double Bubble Sort | Grouping by Line + Alpha-sort by Station |
 
-### Engineer Access
-* **Add Delay to Track:** Updates the weight of a specific graph edge, which directly impacts the customer's route-finding algorithm.
-* **Manage Connections (Open/Close):** Logically "deletes" or restores edges in the graph network, rendering them impassable. Includes a pre-check to show current track status.
-* **View Network Status:** Generates isolated reports detailing all current delays and closures across the entire database.
+---
+
+## Functional Summary
+
+### Customer Portal
+* **Journey Planner:** Graphical vertical timeline showing every stop, line change, and total travel time.
+* **Live Departures:** Grouped and sorted view of upcoming trains, simulating a real-world platform display with "Due/min" intervals.
+* **Line Filter:** A-Z sorted list of all stations on a selected Underground line.
+
+### Engineer Portal
+* **Disruption Management:** Update track weights (Delays) or logically remove edges (Closures).
+* **Status Pre-check:** Real-time state verification before committing network changes.
+* **Network Reports:** Isolated status summaries for active delays and closures.
 
 ---

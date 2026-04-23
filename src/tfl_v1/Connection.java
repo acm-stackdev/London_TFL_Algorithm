@@ -6,27 +6,21 @@ package tfl_v1;
  */
 public class Connection {
 
-    // Core attributes for the route
     private Station destination;
     private String lineName;
     private String direction;
 
-    // Time and Status attributes
     private double normalTime;
     private double delayTime;
     private boolean isOpen;
 
-    /**
-     * Constructor: Creates a new track.
-     * By default, a new track has 0 delay and is open.
-     */
+
     public Connection(Station destination, String lineName, String direction, double normalTime) {
         this.destination = destination;
         this.lineName = lineName;
         this.direction = direction;
         this.normalTime = normalTime;
 
-        // Default engineer statuses
         this.delayTime = 0.0;
         this.isOpen = true;
     }

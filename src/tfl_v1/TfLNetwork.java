@@ -32,6 +32,7 @@ public class TfLNetwork {
     }
 
     public Station getStation(String name) {
+        //Linear Search
         for (int i = 0; i < totalStations; i++) {
             if (stationList[i].getName().equalsIgnoreCase(name)) {
                 return stationList[i];
@@ -167,129 +168,133 @@ public class TfLNetwork {
     // CUSTOMER METHODS (Search & Filter) & Benchmark
 
     public void displayStationInformation(String stationName) {
-        // START BENCHMARK
+        // START BENCHMARK: Search & Sort
         long startTime = System.nanoTime();
         Station foundStation = getStation(stationName);
-        long endTime = System.nanoTime();
-        // STOP BENCHMARK
 
         if (foundStation == null) {
             System.out.println("Error: Could not find a station named '" + stationName + "'.");
             return;
         }
 
+        // --- DOUBLE SORTING LOGIC (Bubble Sort) O(N) square ---
+        int count = foundStation.getConnectionCount();
+        Connection[] sortedTracks = new Connection[count];
+        for (int i = 0; i < count; i++) {
+            sortedTracks[i] = foundStation.getConnections()[i];
+        }
+
+        for (int i = 0; i < count - 1; i++) {
+            for (int j = 0; j < count - i - 1; j++) {
+                String line1 = sortedTracks[j].getLineName();
+                String line2 = sortedTracks[j + 1].getLineName();
+                String dest1 = sortedTracks[j].getDestination().getName();
+                String dest2 = sortedTracks[j + 1].getDestination().getName();
+
+                // Check Line Name first (Primary Sort)
+                int lineCompare = lineNameCompare(line1, line2);
+
+                if (lineCompare > 0 || (lineCompare == 0 && dest1.compareToIgnoreCase(dest2) > 0)) {
+                    // Swap if Line is wrong OR if Lines are same but Destination is wrong
+                    Connection temp = sortedTracks[j];
+                    sortedTracks[j] = sortedTracks[j + 1];
+                    sortedTracks[j + 1] = temp;
+                }
+            }
+        }
+
+        // STOP BENCHMARK
+        long endTime = System.nanoTime();
+
+        // --- DISPLAY LOGIC ---
         System.out.println("\n=======================================================");
         System.out.println("   LIVE DEPARTURES: " + foundStation.getName().toUpperCase());
         System.out.println("=======================================================");
 
-        if (foundStation.getConnectionCount() == 0) {
-            System.out.println("No outgoing tracks found for this station.");
-            return;
+        String currentLine = "";
+        for (int i = 0; i < count; i++) {
+            Connection track = sortedTracks[i];
+
+            // If we hit a new line, print the header
+            if (!track.getLineName().equalsIgnoreCase(currentLine)) {
+                currentLine = track.getLineName();
+                System.out.println("\n[ " + currentLine.toUpperCase() + " LINE ]");
+            }
+
+            String dest = track.getDestination().getName().toUpperCase();
+
+            if (!track.isOpen()) {
+                System.out.printf("  %-30s %s%n", dest, "CLOSED");
+                continue;
+            }
+
+            if (track.getDelayTime() > 5.0) {
+                System.out.printf("  %-30s %s%n", dest, "SEVERE DELAYS");
+                continue;
+            }
+
+            // Simulate times
+            int t1 = (int)(Math.random() * 3);
+            int t2 = t1 + (int)(Math.random() * 4) + 2;
+            int t3 = t2 + (int)(Math.random() * 5) + 3;
+            String t1Disp = (t1 == 0) ? "Due" : t1 + " min";
+
+            System.out.printf("  %-30s %s, %d min, %d min%n", dest, t1Disp, t2, t3);
         }
 
-        // 1. Find all unique Lines at this station
-        String[] uniqueLines = new String[foundStation.getConnectionCount()];
-        int uniqueLineCount = 0;
-
-        for (int i = 0; i < foundStation.getConnectionCount(); i++) {
-            String lineName = foundStation.getConnections()[i].getLineName();
-            boolean alreadyAdded = false;
-
-            for (int j = 0; j < uniqueLineCount; j++) {
-                if (uniqueLines[j].equalsIgnoreCase(lineName)) {
-                    alreadyAdded = true;
-                    break;
-                }
-            }
-            if (!alreadyAdded) {
-                uniqueLines[uniqueLineCount] = lineName;
-                uniqueLineCount++;
-            }
-        }
-
-        // 2. Print the departures grouped by Line
-        for (int i = 0; i < uniqueLineCount; i++) {
-            String currentLineName = uniqueLines[i];
-            System.out.println("\n[ " + currentLineName.toUpperCase() + " LINE ]");
-
-            // Find all tracks that belong to this specific line
-            for (int j = 0; j < foundStation.getConnectionCount(); j++) {
-                Connection track = foundStation.getConnections()[j];
-
-                if (track.getLineName().equalsIgnoreCase(currentLineName)) {
-                    String dest = track.getDestination().getName();
-
-                    // Check if closed
-                    if (!track.isOpen()) {
-                        System.out.printf("  %-28s %s%n", dest, "CLOSED");
-                        continue;
-                    }
-
-                    // Check for severe delays
-                    if (track.getDelayTime() > 5.0) {
-                        System.out.printf("  %-28s %s%n", dest, "SEVERE DELAYS");
-                        continue;
-                    }
-
-                    // Calculate simulated live times
-                    int train1 = (int)(Math.random() * 3);
-                    int train2 = train1 + (int)(Math.random() * 4) + 2;
-                    int train3 = train2 + (int)(Math.random() * 5) + 3;
-
-                    String t1Display = (train1 == 0) ? "Due" : train1 + " min";
-
-                    // Print the result
-                    System.out.printf("  %-28s %s, %d min, %d min%n", dest, t1Display, train2, train3);
-                }
-            }
-        }
-        System.out.println("\n=======================================================");
-
-        //PRINT BENCHMARK RESULTS
         double executionTimeMs = (endTime - startTime) / 1_000_000.0;
-        System.out.println("Array Search Time: " + String.format("%.5f", executionTimeMs) + " ms");
+        System.out.println("\n=======================================================");
+        System.out.println("Double-Sort & Search Time: " + String.format("%.5f", executionTimeMs) + " ms");
         System.out.println("=======================================================");
     }
 
     //CUSTOMER METHOD (Line Filter & Benchmark)
 
     public void displayStationsOnLine(String searchLineName) {
-        System.out.println("\n--- Stations on the " + searchLineName + " Line ---");
-        boolean foundAny = false;
+        System.out.println("\n--- Stations on the " + searchLineName + " Line (By Alphabet) ---");
 
-        // START BENCHMARK: Timing the array filtering process
-        long startTime = System.nanoTime();
-
+        // 1. Filter stations into a temporary array
+        Station[] results = new Station[totalStations];
+        int count = 0;
         for (int i = 0; i < totalStations; i++) {
-            Station currentStation = stationList[i];
-            boolean isOnLine = false;
-
-            for (int j = 0; j < currentStation.getConnectionCount(); j++) {
-                if (currentStation.getConnections()[j].getLineName().equalsIgnoreCase(searchLineName)) {
-                    isOnLine = true;
+            for (int j = 0; j < stationList[i].getConnectionCount(); j++) {
+                if (stationList[i].getConnections()[j].getLineName().equalsIgnoreCase(searchLineName)) {
+                    results[count++] = stationList[i];
                     break;
                 }
             }
+        }
 
-            if (isOnLine) {
-                System.out.println("- " + currentStation.getName());
-                foundAny = true;
+        if (count == 0) {
+            System.out.println("No stations found for line: " + searchLineName);
+            return;
+        }
+
+        // 2. BENCHMARK SORTING: Bubble Sort (A-Z)
+        long sortStart = System.nanoTime();
+
+        for (int i = 0; i < count - 1; i++) {
+            for (int j = 0; j < count - i - 1; j++) {
+                if (results[j].getName().compareToIgnoreCase(results[j + 1].getName()) > 0) {
+                    Station temp = results[j];
+                    results[j] = results[j + 1];
+                    results[j + 1] = temp;
+                }
             }
         }
-        // STOP BENCHMARK
-        long endTime = System.nanoTime();
 
-        if (!foundAny) {
-            System.out.println("No stations found for line: " + searchLineName);
+        long sortEnd = System.nanoTime();
+
+        // 3. Display Sorted Results
+        for (int i = 0; i < count; i++) {
+            System.out.println( i+1 + "  " + results[i].getName());
         }
 
-        //Print BENCHMARK
-        double executionTimeMs = (endTime - startTime) / 1_000_000.0;
+        double sortTimeMs = (sortEnd - sortStart) / 1_000_000.0;
         System.out.println("-------------------------------------");
-        System.out.println("Array Filter Time: " + String.format("%.5f", executionTimeMs) + " ms");
+        System.out.println("Bubble Sort Time (A-Z): " + String.format("%.5f", sortTimeMs) + " ms");
         System.out.println("-------------------------------------");
     }
-
 
     // CUSTOMER METHOD (Find Fastest Route & Benchmark)
 
@@ -466,5 +471,9 @@ public class TfLNetwork {
         } catch (Exception e) {
             return "Unknown";
         }
+    }
+
+    private int lineNameCompare(String s1, String s2) {
+        return s1.compareToIgnoreCase(s2);
     }
 }
