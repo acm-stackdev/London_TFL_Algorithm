@@ -278,3 +278,37 @@ Enter Station Name to search for: ALDGATE
     -> LIVERPOOL STREET             (Inner)  1.75 min
     -> TOWER HILL                   (Outer)  1.37 min
 =======================================================
+
+11. Testing output : Searching a Station on the Line (Compare Linear Search and Binary Search Algorithm)
+--- CUSTOMER MENU ---
+1. Plan a Journey (Fastest Route)
+2. Search by Station (Live Board)
+3. View Stations on a Line
+4. Search for a Station on a Line
+0. Return to Main Menu
+Enter choice: 4
+Enter Line Name (e.g., Victoria, Jubilee): Piccadilly
+Enter Station Name to search for: SOUTH KENSINGTON
+
+=======================================================
+  Search: "SOUTH KENSINGTON" on Piccadilly Line
+  Total stations on this line: 12
+=======================================================
+  RESULT: FOUND
+-------------------------------------------------------
+                               LINEAR SEARCH   BINARY SEARCH
+  -------------------------------------------------------
+  Complexity:                  O(n)            O(log n)
+  Requires sorted array?       No              Yes
+  Iterations taken:            3               4
+  Max possible iterations:     12              4
+  Time taken (ms):             0.00070         0.00060
+  Time taken (ns):             700             600
+  -------------------------------------------------------
+ Linear Search was faster by 1 iteration(s) this time.
+  (This can happen when the target is near the start of the list)
+
+  Departures from SOUTH KENSINGTON on Piccadilly line:
+    -> KNIGHTSBRIDGE                (Eastbound)  2.48 min
+    -> GLOUCESTER ROAD              (Westbound)  1.37 min
+=======================================================
