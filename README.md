@@ -1,5 +1,4 @@
 # TfL Network Manager — Version 1
-**7SENG010W Data Structures & Algorithms | University of Westminster**
 
 Version 1 is a fully hand-coded Java application with no use of Java library data structures or algorithm classes (no `ArrayList`, `HashMap`, `Collections.sort()` etc). All data structures and algorithms are implemented from scratch using primitive arrays.
 
@@ -128,6 +127,26 @@ A `PriorityQueue`-based Dijkstra (used in Version 2) reduces this to O((n + e) l
 **Path reconstruction:**
 After the algorithm finishes, the path is traced backwards from target to start using `previousIndex[]`, then reversed into a forward-ordered array for printing. Each step is printed with its travel time, and any line changes are printed as separate interchange steps.
 
+---
+## Function Reference
+
+| Method | Class | What it does |
+|---|---|---|
+| `findFastestRoute(start, end)` | TfLNetwork | Dijkstra's algorithm — finds fastest path, prints step-by-step itinerary |
+| `searchStationOnLine(line, station)` | TfLNetwork | Runs Linear + Binary Search, prints side-by-side performance comparison |
+| `displayStationsOnLine(line)` | TfLNetwork | Bubble sorts stations on a line A–Z, prints with sort time |
+| `displayStationInformation(station)` | TfLNetwork | Bubble sorts departures by line+destination, prints live board |
+| `addDelayToTrack(start, end, mins)` | TfLNetwork | Sets delay time on a connection |
+| `removeDelayFromTrack(start, end)` | TfLNetwork | Clears delay time on a connection |
+| `openOrCloseTrack(start, end, bool)` | TfLNetwork | Opens or closes a connection |
+| `printDelayStatus()` | TfLNetwork | Lists all connections with active delays |
+| `printClosureStatus()` | TfLNetwork | Lists all closed connections |
+| `getStation(name)` | TfLNetwork | Linear search across all stations |
+| `addStation(name)` | TfLNetwork | Adds station to dynamic array, resizes if needed |
+| `addConnection(connection)` | Station | Adds directed edge to station's dynamic array |
+| `getInterchangeTime(from, to)` | Station | Looks up walking time between two lines at this station |
+| `getTotalTime()` | Connection | Returns normalTime + delayTime |
+ 
 ---
 
 ## Benchmarking Summary
