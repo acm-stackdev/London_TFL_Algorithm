@@ -22,7 +22,6 @@ public class TfLMain {
         // START BENCHMARK: DATABASE LOAD TIME
         long startLoadTime = System.nanoTime();
 
-        // Load our two specific CSV files
         loadConnections(network, "Connections.csv");
         loadInterchanges(network, "Interchanges.csv");
 
@@ -68,15 +67,18 @@ public class TfLMain {
         scanner.close();
     }
 
-    // CUSTOMER MENU ROUTINE
+    // ==========================================
+    // CUSTOMER MENU
+    // ==========================================
     private static void runCustomerMenu(Scanner scanner, TfLNetwork network) {
         boolean inCustomerMenu = true;
 
         while (inCustomerMenu) {
             System.out.println("\n--- CUSTOMER MENU ---");
-            System.out.println("1. Plan a Journey "); //Fastest Route
-            System.out.println("2. Search by Station");// Live Board
-            System.out.println("3. View Stations on a Line"); //Filter by Line
+            System.out.println("1. Plan a Journey (Fastest Route)");
+            System.out.println("2. Search by Station (Live Board)");
+            System.out.println("3. View Stations on a Line");
+            System.out.println("4. Search for a Station on a Line");
             System.out.println("0. Return to Main Menu");
             System.out.print("Enter choice: ");
 
@@ -87,10 +89,8 @@ public class TfLMain {
                     System.out.println("\n--- TfL Journey Planner ---");
                     System.out.print("From (Start Station): ");
                     String routeStart = scanner.nextLine();
-
                     System.out.print("To (Destination Station): ");
                     String routeTarget = scanner.nextLine();
-
                     network.findFastestRoute(routeStart, routeTarget);
                     break;
 
@@ -106,6 +106,14 @@ public class TfLMain {
                     network.displayStationsOnLine(lineName);
                     break;
 
+                case "4":
+                    System.out.print("Enter Line Name (e.g., Victoria, Jubilee): ");
+                    String searchLine = scanner.nextLine();
+                    System.out.print("Enter Station Name to search for: ");
+                    String searchStation = scanner.nextLine();
+                    network.searchStationOnLine(searchLine, searchStation);
+                    break;
+
                 case "0":
                     inCustomerMenu = false;
                     break;
@@ -116,16 +124,19 @@ public class TfLMain {
         }
     }
 
-    // ENGINEER MENU ROUTINE
+    // ==========================================
+    // ENGINEER MENU
+    // ==========================================
     private static void runEngineerMenu(Scanner scanner, TfLNetwork network) {
         boolean inEngineerMenu = true;
 
         while (inEngineerMenu) {
             System.out.println("\n--- ENGINEER MENU ---");
             System.out.println("1. Add Delay to Track");
-            System.out.println("2. Manage Connections Track (Open/Close)");
-            System.out.println("3. View Delay Status");
-            System.out.println("4. View Connection Status (Closures)");
+            System.out.println("2. Remove Delay from Track");
+            System.out.println("3. Manage Track (Open/Close)");
+            System.out.println("4. View Delay Status");
+            System.out.println("5. View Connection Status (Closures)");
             System.out.println("0. Return to Main Menu");
             System.out.print("Enter choice: ");
 
@@ -148,15 +159,23 @@ public class TfLMain {
 
                 case "2":
                     System.out.print("Enter Start Station: ");
+                    String removeStart = scanner.nextLine();
+                    System.out.print("Enter Target Station: ");
+                    String removeTarget = scanner.nextLine();
+                    network.removeDelayFromTrack(removeStart, removeTarget);
+                    break;
+
+                case "3":
+                    System.out.print("Enter Start Station: ");
                     String statusStart = scanner.nextLine();
                     System.out.print("Enter Target Station: ");
                     String statusTarget = scanner.nextLine();
 
-                    // Fetch and display current status!
                     String currentStatus = network.getTrackStatusString(statusStart, statusTarget);
 
                     if (currentStatus.equals("Not Found")) {
-                        System.out.println("Error: No direct route exists between " + statusStart + " and " + statusTarget + ".");
+                        System.out.println("Error: No direct route exists between "
+                                + statusStart + " and " + statusTarget + ".");
                     } else {
                         System.out.println("Current Status: " + currentStatus);
                         System.out.println("Select Action:");
@@ -175,11 +194,11 @@ public class TfLMain {
                     }
                     break;
 
-                case "3":
+                case "4":
                     network.printDelayStatus();
                     break;
 
-                case "4":
+                case "5":
                     network.printClosureStatus();
                     break;
 
@@ -203,13 +222,13 @@ public class TfLMain {
 
                 String[] parts = line.split(",");
                 if (parts.length >= 5) {
-                    String startStation = parts[0].trim();
+                    String startStation  = parts[0].trim();
                     String targetStation = parts[1].trim();
-                    double travelTime = Double.parseDouble(parts[2].trim());
-                    String lineName = parts[3].trim();
-                    String direction = parts[4].trim();
+                    double travelTime    = Double.parseDouble(parts[2].trim());
+                    String lineName      = parts[3].trim();
+                    String direction     = parts[4].trim();
 
-                    if (network.getStation(startStation) == null) network.addStation(startStation);
+                    if (network.getStation(startStation)  == null) network.addStation(startStation);
                     if (network.getStation(targetStation) == null) network.addStation(targetStation);
                     network.addNewTrack(startStation, targetStation, lineName, direction, travelTime);
                     loadedCount++;
@@ -230,9 +249,9 @@ public class TfLMain {
 
                 String[] parts = line.split(",");
                 if (parts.length >= 4) {
-                    String station = parts[0].trim();
+                    String station  = parts[0].trim();
                     String fromLine = parts[1].trim();
-                    String toLine = parts[2].trim();
+                    String toLine   = parts[2].trim();
                     double walkTime = Double.parseDouble(parts[3].trim());
 
                     network.addNewInterchange(station, fromLine, toLine, walkTime);

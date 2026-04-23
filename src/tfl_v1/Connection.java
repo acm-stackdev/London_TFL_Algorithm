@@ -29,7 +29,7 @@ public class Connection {
 
     /**
      * Calculates the total time it takes to travel this track right now.
-     * Route-finding algorithm will use!
+     * Route-finding algorithm uses this.
      */
     public double getTotalTime() {
         return normalTime + delayTime;
@@ -47,6 +47,9 @@ public class Connection {
         return direction;
     }
 
+    public double getNormalTime() {
+        return normalTime;
+    }
 
     public void setDelayTime(double delayMinutes) {
         this.delayTime = delayMinutes;
