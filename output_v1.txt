@@ -204,7 +204,7 @@ Enter Station Name: Bond Street
 Double-Sort & Search Time: 0.01550 ms
 =======================================================
 
-9. Testing output : Searching a Station by Line (Bubble Sorting)
+10. Testing output : Searching a Station by Line (Bubble Sorting)
 --- CUSTOMER MENU ---
 1. Plan a Journey (Fastest Route)
 2. Search by Station (Live Board)
@@ -246,7 +246,7 @@ Enter Line Name (e.g., Victoria, Jubilee): Circle
 Bubble Sort Time (A-Z): 0.13000 ms
 -------------------------------------
 
-10. Testing output : Searching a Station on the Line (Compare Linear Search and Binary Search Algorithm)
+11. Testing output : Searching a Station on the Line (Compare Linear Search and Binary Search Algorithm)
 --- CUSTOMER MENU ---
 1. Plan a Journey (Fastest Route)
 2. Search by Station (Live Board)
@@ -279,7 +279,7 @@ Enter Station Name to search for: ALDGATE
     -> TOWER HILL                   (Outer)  1.37 min
 =======================================================
 
-11. Testing output : Searching a Station on the Line (Compare Linear Search and Binary Search Algorithm)
+12. Testing output : Searching a Station on the Line (Compare Linear Search and Binary Search Algorithm)
 --- CUSTOMER MENU ---
 1. Plan a Journey (Fastest Route)
 2. Search by Station (Live Board)
